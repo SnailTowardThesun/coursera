@@ -1,147 +1,114 @@
 import edu.princeton.cs.algs4.StdRandom;
-
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 
 public class RandomizedQueue<Item> implements Iterable<Item> {
-    private int nodeCount;
+    private Item[] queue;
+    private int nodeCount = 0;
 
-    private class Node {
-        Item value;
-        Node previous;
-        Node next;
-    }
-
-    private Node firstNode;
-    private Node lastNode;
-
-    // construct an empty randomized queue
     public RandomizedQueue() {
-        nodeCount = 0;
-        firstNode = new Node();
-        lastNode = new Node();
-
-        firstNode.previous = null;
-        firstNode.next = lastNode;
-
-        lastNode.previous = firstNode;
-        lastNode.next = null;
+        queue = (Item[]) new Object[1];
     }
 
-    // is the queue empty?
     public boolean isEmpty() {
         return nodeCount == 0;
     }
 
-    // return the number of items on the queue
     public int size() {
         return nodeCount;
     }
 
-    // add the item
+    private void resize(int max) {
+        Item[] temp = (Item[]) new Object[max];
+        for (int i = 0; i < nodeCount; i++) {
+            temp[i] = queue[i];
+        }
+        queue = temp;
+    }
+
     public void enqueue(Item item) {
         if (item == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
 
-        Node newNode = new Node();
-        newNode.value = item;
+        if (nodeCount == queue.length) {
+            resize(2 * queue.length);
+        }
 
-        Node tmp = lastNode.previous;
-
-        lastNode.previous = newNode;
-        newNode.next = lastNode;
-
-        newNode.previous = tmp;
-
-        nodeCount++;
+        queue[nodeCount++] = item;
     }
 
-    // remove and return a random item
     public Item dequeue() {
         if (isEmpty()) {
-            throw new java.util.NoSuchElementException();
+            throw new NoSuchElementException();
         }
 
-        int pos = StdRandom.uniform(1, nodeCount);
+        int offset = StdRandom.uniform(nodeCount);
+        Item item = queue[offset];
 
-        Node target = firstNode;
-        for (int i = 0; i < pos; ++i) {
-            target = target.next;
+        if (offset != nodeCount - 1) {
+            queue[offset] = queue[nodeCount - 1];
         }
 
-        target.previous.next = target.next;
-        target.next.previous = target.previous;
-
+        queue[nodeCount - 1] = null;
         nodeCount--;
 
-        return target.value;
+        if (nodeCount > 0 && nodeCount == queue.length / 4) {
+            resize(queue.length / 2);
+        }
+
+        return item;
     }
 
-    // return (but do not remove) a random item
     public Item sample() {
         if (isEmpty()) {
-            throw new java.util.NoSuchElementException();
+            throw new NoSuchElementException();
         }
 
-        int pos = StdRandom.uniform(1, nodeCount);
-
-        Node target = firstNode;
-        for (int i = 0; i < pos; ++i) {
-            target = target.next;
-        }
-
-        return target.value;
+        int offset = StdRandom.uniform(nodeCount);
+        return queue[offset];
     }
 
-    private class RandomQueueIteration implements Iterator<Item> {
-        private int size = nodeCount;
+    public Iterator<Item> iterator() {
+        return new ArrayIterator();
+    }
 
-        @Override
-        public boolean hasNext() {
-            return size != 0;
+    private class ArrayIterator implements Iterator<Item> {
+        private Item[] copyArray = (Item[]) new Object[queue.length];
+        private int copyCount = nodeCount;
+
+        public ArrayIterator() {
+            for (int i = 0; i < queue.length; i++) {
+                copyArray[i] = queue[i];
+            }
         }
 
-        @Override
+        public boolean hasNext() {
+            return copyCount != 0;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
         public Item next() {
-
-            int pos = StdRandom.uniform(1, size);
-
-            Node target = firstNode;
-            for (int i = 0; i < pos; ++i) {
-                target = target.next;
+            if (!hasNext()) {
+                throw new NoSuchElementException();
             }
 
-            // remove target
-            target.previous.next = target.next;
-            target.next.previous = target.previous;
+            int offset = StdRandom.uniform(copyCount);
+            Item item = copyArray[offset];
 
-            // insert target to end
-            lastNode.previous.next = target;
-            target.previous = lastNode.previous;
-
-            target.next = lastNode;
-            lastNode.previous = target;
-
-            size--;
-
-            return target.value;
+            if (offset != copyCount - 1) {
+                copyArray[offset] = copyArray[copyCount - 1];
+            }
+            copyArray[copyCount - 1] = null;
+            copyCount--;
+            return item;
         }
-
-        @Override
-        public void remove() {
-            throw new java.lang.UnsupportedOperationException();
-        }
-
     }
 
-    // return an independent iterator over items in random order
-    @Override
-    public Iterator<Item> iterator() {
-        return new RandomQueueIteration();
-    }
-
-    // unit testing (optional)
     public static void main(String[] args) {
     }
-
 }

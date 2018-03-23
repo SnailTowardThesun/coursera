@@ -1,132 +1,130 @@
 import java.util.Iterator;
-import edu.princeton.cs.algs4.WeightedQuickUnionUF;
+import java.util.NoSuchElementException;
 
 public class Deque<Item> implements Iterable<Item> {
+    private int nodeCount;
+    private Node firstNode, lastNode;
 
     private class Node {
-        Item value;
-        Node previous;
+        Item item;
         Node next;
+        Node previous;
     }
 
-    private Node firstNode;
-    private Node lastNode;
-    private int nodeCounts;
-
     public Deque() {
-        firstNode = new Node();
-        lastNode = new Node();
-        firstNode.next = lastNode;
-        firstNode.previous = null;
-        lastNode.previous = firstNode;
-        lastNode.next = null;
-
-        nodeCounts = 0;
+        firstNode = lastNode = null;
+        nodeCount = 0;
     }
 
     public boolean isEmpty() {
-        return firstNode == lastNode;
+        return nodeCount == 0;
     }
 
     public int size() {
-        return nodeCounts;
+        return nodeCount;
     }
 
     public void addFirst(Item item) {
         if (item == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
 
-        Node newNode = new Node();
-        newNode.value = item;
+        Node firstOld = firstNode;
+        firstNode = new Node();
+        firstNode.item = item;
+        firstNode.previous = null;
 
-        Node tmp = firstNode.next;
-        firstNode.next = newNode;
-        newNode.previous = firstNode;
-        newNode.next = tmp;
-        tmp.previous = newNode;
+        if (isEmpty()) {
+            lastNode = firstNode;
+            firstNode.next = null;
+        } else {
+            firstNode.next = firstOld;
+            firstOld.previous = firstNode;
+        }
 
-        nodeCounts++;
+        nodeCount++;
     }
 
     public void addLast(Item item) {
         if (item == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
 
-        Node newNode = new Node();
-        newNode.value = item;
+        Node lastOld = lastNode;
+        lastNode = new Node();
+        lastNode.item = item;
+        lastNode.next = null;
 
-        Node tmp = lastNode.previous;
-        newNode.next = lastNode;
-        lastNode.previous = newNode;
+        if (isEmpty()) {
+            firstNode = lastNode;
+            lastNode.previous = null;
+        } else {
+            lastNode.previous = lastOld;
+            lastOld.next = lastNode;
+        }
 
-        newNode.previous = tmp;
-        tmp.next = newNode;
-
-        nodeCounts++;
+        nodeCount++;
     }
 
     public Item removeFirst() {
         if (isEmpty()) {
-            throw new java.util.NoSuchElementException();
+            throw new NoSuchElementException();
         }
+        Item item = firstNode.item;
+        firstNode = firstNode.next;
+        nodeCount--;
+        if (isEmpty()) {
+            lastNode = firstNode = null;
+        } else {
+            firstNode.previous = null;
+        }
+        return item;
 
-        Node tmp = firstNode.next;
-        firstNode.next = tmp.next;
-        tmp.next.previous = firstNode;
-
-        nodeCounts--;
-        return tmp.value;
     }
 
     public Item removeLast() {
+        if (isEmpty()) throw new NoSuchElementException();
+        Item item = lastNode.item;
+        lastNode = lastNode.previous;
+        nodeCount--;
         if (isEmpty()) {
-            throw new java.util.NoSuchElementException();
+            firstNode = lastNode = null;
+        } else {
+            lastNode.next = null;
         }
+        return item;
+    }
 
-        Node tmp = lastNode.previous;
-        lastNode.previous = tmp.previous;
-        tmp.previous.next = lastNode;
-
-        nodeCounts--;
-
-        return tmp.value;
+    public Iterator<Item> iterator() {
+        return new DequeIterator(firstNode);
     }
 
     private class DequeIterator implements Iterator<Item> {
-        private Node current = firstNode;
+        private Node current;
 
-        @Override
+        public DequeIterator(Node first) {
+            current = first;
+        }
+
         public boolean hasNext() {
-            return current.next == lastNode;
+            return current != null;
         }
 
-        @Override
         public void remove() {
-            throw new java.lang.UnsupportedOperationException();
+            throw new UnsupportedOperationException();
         }
 
-        @Override
         public Item next() {
             if (!hasNext()) {
-                return null;
+                throw new NoSuchElementException();
             }
 
-            Item item = current.value;
+            Item item = current.item;
             current = current.next;
-
             return item;
         }
     }
 
-    @Override
-    public Iterator<Item> iterator() {
-        return new DequeIterator();
-    }
-
-    // unit testing (optional)
     public static void main(String[] args) {
     }
-
 }

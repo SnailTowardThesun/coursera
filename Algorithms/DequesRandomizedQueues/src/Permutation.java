@@ -3,21 +3,15 @@ import edu.princeton.cs.algs4.StdOut;
 
 public class Permutation {
     public static void main(String[] args) {
-        int n = 0;
-        if (args.length >= 1) {
-            n = Integer.parseInt(args[0]);
-        }
-        RandomizedQueue<String> randomizedQueue = new RandomizedQueue<String>();
-
-        System.out.println("test");
+        RandomizedQueue<String> q = new RandomizedQueue<String>();
+        int k = Integer.valueOf(args[0]);
         while (!StdIn.isEmpty()) {
-            String x = StdIn.readString();
-            System.out.println(x);
-            randomizedQueue.enqueue(x);
+            String item = StdIn.readString();
+            q.enqueue(item);
         }
-
-        for (int i = 0; i < n; ++i) {
-            StdOut.println(randomizedQueue.dequeue());
+        while (k > 0) {
+            StdOut.println(q.dequeue());
+            k--;
         }
     }
 }
